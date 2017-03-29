@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/timeb.h>
+#include <time.h>
 
 struct logger {
 	FILE * handle;
@@ -30,6 +35,19 @@ logger_release(struct logger * inst) {
 	skynet_free(inst);
 }
 
+static void
+print_time(FILE *fp) {
+    struct timeb tp; 
+    struct tm *ptm;
+    ftime(&tp);
+    ptm = localtime(&tp.time);
+    fprintf(fp, "%02d:%02d:%02d:%03d ",
+            ptm->tm_hour,
+            ptm->tm_min,
+            ptm->tm_sec,
+            tp.millitm);
+}
+
 static int
 logger_cb(struct skynet_context * context, void *ud, int type, int session, uint32_t source, const void * msg, size_t sz) {
 	struct logger * inst = ud;
@@ -40,7 +58,8 @@ logger_cb(struct skynet_context * context, void *ud, int type, int session, uint
 		}
 		break;
 	case PTYPE_TEXT:
-		fprintf(inst->handle, "[:%08x] ",source);
+        print_time(inst->handle);
+		fprintf(inst->handle, "[:%08x][%d:%lu] ",source, getpid(), pthread_self());
 		fwrite(msg, sz , 1, inst->handle);
 		fprintf(inst->handle, "\n");
 		fflush(inst->handle);
