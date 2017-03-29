@@ -1,3 +1,5 @@
+#define LUA_LIB
+
 #include <lua.h>
 #include <lauxlib.h>
 
@@ -494,7 +496,7 @@ static int
 lfromhex(lua_State *L) {
 	size_t sz = 0;
 	const char * text = luaL_checklstring(L, 1, &sz);
-	if (sz & 2) {
+	if (sz & 1) {
 		return luaL_error(L, "Invalid hex text size %d", (int)sz);
 	}
 	char tmp[SMALL_CHUNK];
@@ -901,7 +903,7 @@ lxor_str(lua_State *L) {
 int lsha1(lua_State *L);
 int lhmac_sha1(lua_State *L);
 
-int
+LUAMOD_API int
 luaopen_crypt(lua_State *L) {
 	luaL_checkversion(L);
 	static int init = 0;
